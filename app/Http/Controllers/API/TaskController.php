@@ -9,49 +9,78 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    public function index()
+    // List tasks, optionally filter by status
+    public function index(Request $request)
     {
-        return Auth::user()->tasks;
+        $request->validate([
+            'status' => 'nullable|in:pending,in_progress,completed',
+        ]);
+
+        $query = Auth::user()->tasks();
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        return response()->json($query->get());
     }
 
+    // Create a new task
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'status' => 'in:pending,in_progress,completed',
         ]);
 
-        return Task::create([
+        $task = Task::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
             'description' => $request->description,
+            'status' => $request->status ?? 'pending',
         ]);
+
+        return response()->json($task, 201);
     }
 
+    // Show a specific task owned by the user
     public function show(Task $task)
     {
-        $this->authorize('view', $task);
-        return $task;
+        if ($task->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return response()->json($task);
     }
 
+    // Update a task
     public function update(Request $request, Task $task)
     {
-        $this->authorize('update', $task);
+        if ($task->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
         $request->validate([
-            'title' => 'string|max:255',
+            'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'is_completed' => 'boolean',
+            'status' => 'in:pending,in_progress,completed',
         ]);
 
-        $task->update($request->all());
-        return $task;
+        $task->update($request->only('title', 'description', 'status'));
+
+        return response()->json($task);
     }
 
+    // Delete a task
     public function destroy(Task $task)
     {
-        $this->authorize('delete', $task);
+        if ($task->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $task->delete();
+
         return response()->noContent();
     }
 }
