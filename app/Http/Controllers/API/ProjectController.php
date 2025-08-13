@@ -15,6 +15,7 @@ class ProjectController extends Controller
 public function index()
 {
     return Auth::user()->projects()->get();
+
 }
 
 public function store(Request $request)
