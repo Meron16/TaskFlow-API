@@ -17,6 +17,8 @@ protected $fillable = [
     'title',
     'description',
     'status',
+    'priority',
+    'due_date',
 ];
 
 

@@ -28,17 +28,22 @@ class TaskController extends Controller
     // Create a new task
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'in:pending,in_progress,completed',
-        ]);
+      $request->validate([
+    'title' => 'required|string|max:255',
+    'description' => 'nullable|string',
+    'status' => 'required|string|in:pending,completed,in-progress',
+    'priority' => 'nullable|string|in:low,medium,high',
+    'due_date' => 'nullable|date',
+]);
+
 
         $task = Task::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
             'description' => $request->description,
             'status' => $request->status ?? 'pending',
+            'priority' => $request->priority ?? 'medium',
+            'due_date' => $request->due_date,
         ]);
 
         return response()->json($task, 201);
@@ -61,13 +66,23 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'in:pending,in_progress,completed',
-        ]);
+   $request->validate([
+    'title' => 'required|string|max:255',
+    'description' => 'nullable|string',
+    'status' => 'required|string|in:pending,completed,in-progress',
+    'priority' => 'nullable|string|in:low,medium,high',
+    'due_date' => 'nullable|date',
+]);
 
-        $task->update($request->only('title', 'description', 'status'));
+
+        $task->update([
+    'title' => $request->title,
+    'description' => $request->description,
+    'status' => $request->status,
+    'priority' => $request->priority ?? 'medium',
+    'due_date' => $request->due_date,
+]);
+
 
         return response()->json($task);
     }
