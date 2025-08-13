@@ -8,7 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 class Task extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id', 'title', 'description', 'is_completed'];
+public function project()
+{
+    return $this->belongsTo(Project::class);
+}
+
+// Add project_id to $fillable
+protected $fillable = [
+    'user_id',
+    'project_id',
+    'title',
+    'description',
+    'status',
+];
+
 
 public function user()
 {
